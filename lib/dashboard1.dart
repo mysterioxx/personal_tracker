@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // --- PAGE 1: DASHBOARD ---
-// This is a StatefulWidget because it needs to manage a list of tasks.
-// The quote fetching is now handled by a FutureBuilder.
+// This StatefulWidget manages a list of tasks and fetches a quote.
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -24,27 +24,40 @@ class _DashboardPageState extends State<DashboardPage> {
   final TextEditingController _taskController = TextEditingController();
 
   // 'initState' is called once when the widget is created.
-  // We initialize our future here.
   @override
   void initState() {
     super.initState();
-    _quoteFuture = _getQuote();
+    _quoteFuture = _getQuote(); // Start fetching the quote immediately.
+    _loadTasks(); // Load tasks from storage when the app opens.
+  }
+
+  // --- FUNCTION TO LOAD TASKS ---
+  Future<void> _loadTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedTasks = prefs.getStringList('tasks');
+    if (savedTasks != null) {
+      setState(() {
+        _tasks.addAll(savedTasks);
+      });
+    }
+  }
+
+  // --- FUNCTION TO SAVE TASKS ---
+  Future<void> _saveTasks() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('tasks', _tasks);
   }
 
   // --- THE ASYNCHRONOUS API CALL FUNCTION ---
-  // A 'Future' is an object that represents a potential value or error that will be available in the future.
   Future<Map<String, dynamic>> _getQuote() async {
     try {
       final response = await http.get(Uri.parse('https://zenquotes.io/api/random'));
       if (response.statusCode == 200) {
-        // The API returns a list with one item, so we take the first one [0].
         return jsonDecode(response.body)[0];
       } else {
-        // If the server response was not 'OK', we throw an exception.
         throw Exception('Failed to load quote with status code: ${response.statusCode}');
       }
     } catch (e) {
-      // If an error happened during the 'try' block (e.g., no internet), we throw a specific error.
       throw Exception('Could not connect to the server.');
     }
   }
@@ -54,8 +67,9 @@ class _DashboardPageState extends State<DashboardPage> {
     if (_taskController.text.isNotEmpty) {
       setState(() {
         _tasks.add(_taskController.text);
-        _taskController.clear(); // Clear the text field after adding the task.
+        _taskController.clear();
       });
+      _saveTasks(); // Save after modifying the list.
     }
   }
 
@@ -64,11 +78,11 @@ class _DashboardPageState extends State<DashboardPage> {
     setState(() {
       _tasks.removeAt(index);
     });
+    _saveTasks(); // Save after modifying the list.
   }
 
   // --- FUNCTION FOR FAVORITING A QUOTE (Placeholder) ---
   void _favoriteQuote() {
-    // You can add logic here to save the quote to a favorites list or database.
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Quote added to favorites!')),
     );
@@ -76,7 +90,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Check if the current theme is dark or light mode.
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final iconColor = isDarkMode ? Colors.white : Colors.black;
@@ -85,22 +98,17 @@ class _DashboardPageState extends State<DashboardPage> {
       appBar: AppBar(
         title: const Text('Dashboard'),
       ),
-      // 'SingleChildScrollView' makes the page scrollable if content overflows.
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: <Widget>[
             // --- QUOTE SECTION with FutureBuilder ---
-            // 'FutureBuilder' handles the asynchronous loading of the quote.
             FutureBuilder<Map<String, dynamic>>(
               future: _quoteFuture,
               builder: (context, snapshot) {
-                // Check the connection state of the future.
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  // Show a loading indicator while the data is being fetched.
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  // If there was an error, display an error message.
                   return Card(
                     elevation: 4,
                     child: Padding(
@@ -109,7 +117,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   );
                 } else {
-                  // If the data is successfully loaded, display the quote.
                   final quoteData = snapshot.data!;
                   final quote = quoteData['q'];
                   final author = quoteData['a'];
@@ -130,7 +137,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                   textAlign: TextAlign.center,
                                 ),
                               ),
-                              // 'IconButton' for the favorite star.
                               IconButton(
                                 icon: Icon(Icons.star_border, color: iconColor),
                                 onPressed: _favoriteQuote,
@@ -168,15 +174,14 @@ class _DashboardPageState extends State<DashboardPage> {
                   onPressed: _addTask,
                 ),
               ),
-              onSubmitted: (_) => _addTask(), // Also adds the task when the user presses enter.
+              onSubmitted: (_) => _addTask(),
             ),
             const SizedBox(height: 20),
 
             // --- TASK LIST SECTION ---
-            // 'ListView.builder' is efficient for displaying dynamic lists.
             ListView.builder(
               shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(), // Prevents nested scrolling.
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: _tasks.length,
               itemBuilder: (context, index) {
                 return Card(
@@ -188,7 +193,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       onChanged: (bool? value) {
                         _removeTask(index);
                       },
-                      activeColor: Colors.blue, // You can customize the color of the checkbox.
+                      activeColor: Colors.blue,
                     ),
                     title: Text(
                       _tasks[index],

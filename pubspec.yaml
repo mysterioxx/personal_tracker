@@ -6,16 +6,16 @@ version: 1.0.0+1
 environment:
   sdk: '>=3.4.3 <4.0.0'
 
-# This is the ONLY dependencies section you need.
 dependencies:
   flutter:
     sdk: flutter
 
-  # Standard iOS icons package.
   cupertino_icons: ^1.0.8
 
-  # This is the http package we added for internet access.
   http: ^1.2.1
+
+  # This is where the shared_preferences dependency should be.
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
@@ -23,10 +23,7 @@ dev_dependencies:
 
   flutter_lints: ^3.0.0
 
-# This section is for Flutter-specific configurations.
 flutter:
-
-  # This line enables the standard Material Design icons.
   uses-material-design: true
 
   # To add assets like images, you would add them here.
