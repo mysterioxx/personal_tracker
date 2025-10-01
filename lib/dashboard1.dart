@@ -1,14 +1,11 @@
-//created a new file named dashboard1.dart
-
-// impoerts for making HTTP requests and handling JSON data.
-
+// Imports for making HTTP requests, handling JSON data, and Flutter widgets.
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// --- PAGE 1: DASHBOARD --- 
-// This is a StatefulWidget because it needs to fetch data from the internet (the quote)
-// and update its state to display that data.
+// --- PAGE 1: DASHBOARD ---
+// This is a StatefulWidget because it needs to manage a list of tasks.
+// The quote fetching is now handled by a FutureBuilder.
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -17,101 +14,192 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  // State variables to hold the quote and its author.
-  // They start with default values.
-  String _quote = "Loading quote...";
-  String _author = "";
+  // A Future to hold the result of our API call.
+  late Future<Map<String, dynamic>> _quoteFuture;
 
-  // 'initState' is a special method that is called exactly ONCE when the
-  // widget is first created and inserted into the widget tree.
-  // It's the perfect place to do initial setup, like fetching data.
+  // A list to store the user's tasks.
+  final List<String> _tasks = [];
+
+  // A controller for the text input field.
+  final TextEditingController _taskController = TextEditingController();
+
+  // 'initState' is called once when the widget is created.
+  // We initialize our future here.
   @override
   void initState() {
     super.initState();
-    _getQuote(); // We call our function to fetch the quote as soon as the page loads.
+    _quoteFuture = _getQuote();
   }
 
-  // --- THE API CALL FUNCTION ---
-  // A 'Future' is an object that represents a potential value, or error,
-  // that will be available at some time in the future.
-  // 'async' marks the function as asynchronous, allowing us to use 'await'.
-  Future<void> _getQuote() async {
-    // A 'try...catch' block is used for error handling.
-    // The 'try' block contains code that might fail (e.g., no internet connection).
+  // --- THE ASYNCHRONOUS API CALL FUNCTION ---
+  // A 'Future' is an object that represents a potential value or error that will be available in the future.
+  Future<Map<String, dynamic>> _getQuote() async {
     try {
-      // 'await' pauses the function's execution until the network request is complete.
-      // We are sending a GET request to the ZenQuotes API for a random quote.
       final response = await http.get(Uri.parse('https://zenquotes.io/api/random'));
-
-      // A status code of 200 means the request was successful ("OK").
       if (response.statusCode == 200) {
-        // We get the response body (which is a String) and decode it from JSON format.
         // The API returns a list with one item, so we take the first one [0].
-        final data = jsonDecode(response.body)[0];
-        // We call 'setState' to update our state variables and rebuild the UI.
-        setState(() {
-          _quote = data['q'];  // 'q' is the key for the quote text in the API response.
-          _author = data['a']; // 'a' is the key for the author.
-        });
+        return jsonDecode(response.body)[0];
       } else {
-        // If the server response was not 'OK', we show an error.
-        setState(() {
-          _quote = "Failed to load quote.";
-          _author = "";
-        });
+        // If the server response was not 'OK', we throw an exception.
+        throw Exception('Failed to load quote with status code: ${response.statusCode}');
       }
     } catch (e) {
-      // If an error happened during the 'try' block (e.g., no internet),
-      // the 'catch' block is executed. We show a connection error message.
+      // If an error happened during the 'try' block (e.g., no internet), we throw a specific error.
+      throw Exception('Could not connect to the server.');
+    }
+  }
+
+  // --- FUNCTION TO ADD A TASK ---
+  void _addTask() {
+    if (_taskController.text.isNotEmpty) {
       setState(() {
-        _quote = "Could not connect to the server.";
-        _author = "";
+        _tasks.add(_taskController.text);
+        _taskController.clear(); // Clear the text field after adding the task.
       });
     }
   }
 
+  // --- FUNCTION TO REMOVE A TASK ---
+  void _removeTask(int index) {
+    setState(() {
+      _tasks.removeAt(index);
+    });
+  }
+
+  // --- FUNCTION FOR FAVORITING A QUOTE (Placeholder) ---
+  void _favoriteQuote() {
+    // You can add logic here to save the quote to a favorites list or database.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Quote added to favorites!')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Check if the current theme is dark or light mode.
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final iconColor = isDarkMode ? Colors.white : Colors.black;
+
     return Scaffold(
-      // The bar at the top of the screen.
       appBar: AppBar(
         title: const Text('Dashboard'),
       ),
-      // 'Padding' adds some empty space around its child widget.
-      body: Padding(
+      // 'SingleChildScrollView' makes the page scrollable if content overflows.
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        // 'Column' arranges its children vertically.
         child: Column(
-          // 'mainAxisAlignment' aligns the children along the vertical axis.
-          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('Welcome!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 40), // Just an invisible box for spacing.
-            const Text('Daily Motivational Quote:', style: TextStyle(fontSize: 18)),
-            const SizedBox(height: 10),
-            // 'Card' creates a Material Design card with a slight shadow.
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    // This Text widget displays the quote we fetched.
-                    Text(
-                      '"$_quote"',
-                      style: const TextStyle(fontSize: 20, fontStyle: FontStyle.italic),
-                      textAlign: TextAlign.center,
+            // --- QUOTE SECTION with FutureBuilder ---
+            // 'FutureBuilder' handles the asynchronous loading of the quote.
+            FutureBuilder<Map<String, dynamic>>(
+              future: _quoteFuture,
+              builder: (context, snapshot) {
+                // Check the connection state of the future.
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  // Show a loading indicator while the data is being fetched.
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  // If there was an error, display an error message.
+                  return Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text('Error: ${snapshot.error}', textAlign: TextAlign.center),
                     ),
-                    const SizedBox(height: 10),
-                    // This Text widget displays the author we fetched.
-                    Text(
-                      '- $_author',
-                      style: const TextStyle(fontSize: 16),
-                      textAlign: TextAlign.right,
+                  );
+                } else {
+                  // If the data is successfully loaded, display the quote.
+                  final quoteData = snapshot.data!;
+                  final quote = quoteData['q'];
+                  final author = quoteData['a'];
+
+                  return Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '"$quote"',
+                                  style: const TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              // 'IconButton' for the favorite star.
+                              IconButton(
+                                icon: Icon(Icons.star_border, color: iconColor),
+                                onPressed: _favoriteQuote,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            '- $author',
+                            style: const TextStyle(fontSize: 16),
+                            textAlign: TextAlign.right,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  );
+                }
+              },
+            ),
+
+            const SizedBox(height: 30),
+
+            // --- TASK INPUT SECTION ---
+            Text('To-Do List', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor)),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _taskController,
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
+                hintText: 'Add a new task...',
+                hintStyle: TextStyle(color: textColor.withOpacity(0.6)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.add, color: iconColor),
+                  onPressed: _addTask,
                 ),
               ),
+              onSubmitted: (_) => _addTask(), // Also adds the task when the user presses enter.
+            ),
+            const SizedBox(height: 20),
+
+            // --- TASK LIST SECTION ---
+            // 'ListView.builder' is efficient for displaying dynamic lists.
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(), // Prevents nested scrolling.
+              itemCount: _tasks.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ListTile(
+                    leading: Checkbox(
+                      value: false,
+                      onChanged: (bool? value) {
+                        _removeTask(index);
+                      },
+                      activeColor: Colors.blue, // You can customize the color of the checkbox.
+                    ),
+                    title: Text(
+                      _tasks[index],
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

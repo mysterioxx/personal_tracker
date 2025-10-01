@@ -14,11 +14,11 @@ import 'package:flutter/material.dart';
 // We import the 'http' package, which we added in pubspec.yaml.
 // It allows our app to make requests to the internet (API calls).
 // We use 'as http' to give it a shorter name.
-import 'package:http/http.dart' as http;
+//import 'package:http/http.dart' as http;
 
 // This built-in library helps us work with JSON data, which is the
 // standard format for most APIs.
-import 'dart:convert';
+//import 'dart:convert';
 
 
 // --- STEP 2: THE STARTING POINT OF THE APP ---
