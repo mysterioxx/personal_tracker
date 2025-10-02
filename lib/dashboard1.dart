@@ -27,7 +27,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    _quoteFuture = _getQuote(); // Start fetching the quote immediately.
+    _quoteFuture = _getQuote(); // Start fetching the quote.
     _loadTasks(); // Load tasks from storage when the app opens.
   }
 
@@ -49,11 +49,30 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // --- THE ASYNCHRONOUS API CALL FUNCTION ---
+  // This function now checks local storage first before making an API call.
   Future<Map<String, dynamic>> _getQuote() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 1. Check if a quote is already saved in storage from this session.
+    final savedQuote = prefs.getString('saved_quote');
+    final savedAuthor = prefs.getString('saved_author');
+
+    if (savedQuote != null && savedAuthor != null) {
+      // If a quote exists, return it immediately without a new API call.
+      return {'q': savedQuote, 'a': savedAuthor};
+    }
+
+    // 2. If no quote is found, make a new API call.
     try {
       final response = await http.get(Uri.parse('https://zenquotes.io/api/random'));
       if (response.statusCode == 200) {
-        return jsonDecode(response.body)[0];
+        final data = jsonDecode(response.body)[0];
+
+        // 3. Save the new quote to local storage for this session.
+        await prefs.setString('saved_quote', data['q']);
+        await prefs.setString('saved_author', data['a']);
+
+        return data;
       } else {
         throw Exception('Failed to load quote with status code: ${response.statusCode}');
       }
@@ -81,11 +100,30 @@ class _DashboardPageState extends State<DashboardPage> {
     _saveTasks(); // Save after modifying the list.
   }
 
-  // --- FUNCTION FOR FAVORITING A QUOTE (Placeholder) ---
-  void _favoriteQuote() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Quote added to favorites!')),
-    );
+  // --- UPDATED FUNCTION FOR FAVORITING A QUOTE ---
+  Future<void> _favoriteQuote() async {
+    // Get the currently displayed quote from the future's data.
+    final quoteData = await _quoteFuture;
+    final quote = quoteData['q'];
+    final author = quoteData['a'];
+
+    // Load existing favorites.
+    final prefs = await SharedPreferences.getInstance();
+    List<String> favorites = prefs.getStringList('favorites') ?? [];
+
+    // Check if the quote is already favorited to avoid duplicates.
+    final quoteString = '"$quote" - $author';
+    if (!favorites.contains(quoteString)) {
+      favorites.add(quoteString);
+      await prefs.setStringList('favorites', favorites);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Quote added to favorites!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This quote is already in your favorites.')),
+      );
+    }
   }
 
   @override
