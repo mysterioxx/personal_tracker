@@ -1,8 +1,3 @@
-A strong README tells a story about your project. It explains what it is, why you built it, and what features it has. I've updated your README to be more comprehensive and descriptive, making it ready for your portfolio.
-
-Here is the modified README:
-
-````
 # personal_tracker ✨
 
 A simple, beautiful, and intuitive personal tracker built with Flutter. This app helps you stay on track with your daily goals and find motivation.
@@ -66,4 +61,3 @@ This guide will help you get the project up and running on your local machine.
 * **Contributing:** Guidelines on how others can contribute to your project.
 * **License:** Information about the project's license (e.g., MIT).
 * **Author:** Your name and a link to your GitHub profile.
-````
