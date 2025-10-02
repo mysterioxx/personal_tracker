@@ -5,14 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // We import our new settings page here.
 import 'settings_page.dart';
+// Import the theme provider package
+import 'package:provider/provider.dart';
+// Import our new theme provider file
+import 'theme_provider.dart';
 
 // --- STEP 1: THE STARTING POINT OF THE APP ---
 
-// The 'main' function is the entry point. Every Flutter app starts running from here.
-void main() {
-  // 'runApp' tells Flutter to inflate the given Widget and attach it to the screen.
-  // In our case, it starts with our 'MyApp' widget.
-  runApp(const MyApp());
+// The 'main' function is now asynchronous to load the theme first.
+Future<void> main() async {
+  // Required for `SharedPreferences` before `runApp`.
+  WidgetsFlutterBinding.ensureInitialized();
+  // Load the initial theme.
+  final themeProvider = await ThemeProvider.loadTheme();
+
+  // Wrap the app in a ChangeNotifierProvider.
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => themeProvider,
+      child: const MyApp(),
+    ),
+  );
 }
 
 // --- STEP 2: THE ROOT WIDGET OF YOUR APPLICATION ---
@@ -27,30 +40,18 @@ class MyApp extends StatelessWidget {
   // Flutter calls this method whenever it needs to draw this widget on the screen.
   @override
   Widget build(BuildContext context) {
-    // 'MaterialApp' is a convenience widget that wraps a number of widgets
-    // that are commonly required for Material Design applications.
+    // We listen to the theme provider to get the current theme.
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    // MaterialApp now gets its theme from the provider.
     return MaterialApp(
       title: 'Personal Tracker', // The title of the app (used by the OS).
 
-      // --- THEME SETUP: This is where the Dark/Light mode magic happens! ---
-
       // 'theme' defines the colors, fonts, etc., for the standard LIGHT MODE.
-      theme: ThemeData(
-        brightness: Brightness.light, // Explicitly says this is a light theme.
-        primarySwatch: Colors.blue,   // Sets the primary color family.
-        useMaterial3: true,           // Enables the latest Material Design visuals.
-      ),
-
-      // 'darkTheme' defines the colors, fonts, etc., for the DARK MODE.
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,  // Explicitly says this is a dark theme.
-        primarySwatch: Colors.blue,   // We can use the same color family.
-        useMaterial3: true,
-      ),
-
-      // This is the key! 'ThemeMode.system' tells the app to AUTOMATICALLY
-      // listen to the phone's system settings and switch between 'theme' and 'darkTheme'.
-      themeMode: ThemeMode.system,
+      theme: themeProvider.currentTheme,
+      darkTheme: ThemeProvider.darkTheme, // We keep a separate dark theme definition for the system default.
+      // themeMode is set based on the theme name.
+      themeMode: themeProvider.themeName == 'system' ? ThemeMode.system : ThemeMode.light,
 
       // 'home' is the first screen the user will see. We point it to our 'MyHomePage'.
       home: const MyHomePage(),
@@ -168,7 +169,7 @@ class AnalyticsPage extends StatelessWidget {
   }
 }
 
-// --- PAGE 3: SETTINGS (MOVED TO settings_page.dart) ---
+// --- PAGE 3: SETTINGS --- (Code is in settings_page.dart)
 
 // --- PAGE 4: FAVORITES (Now displays saved quotes) ---
 // This is a StatefulWidget because its content (the list of favorites) can change.
