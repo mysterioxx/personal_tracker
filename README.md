@@ -27,8 +27,23 @@ This guide will help you get the project up and running on your local machine.
 
 ### Prerequisites
 
-* **Flutter SDK:** Ensure you have the Flutter SDK installed on your system.
+* **Flutter SDK:** Make sure you have the Flutter SDK installed on your system.
 * **Android Studio or VS Code:** You'll need a code editor with the Flutter and Dart extensions.
+* **Platform-specific Setup:** You must have a working setup for either Android or iOS development.
+
+### Flutter Setup Guides
+
+#### On macOS
+1.  **Install Xcode:** Install the latest version of Xcode from the Mac App Store.
+2.  **Install CocoaPods:** Open your terminal and run `sudo gem install cocoapods`.
+3.  **Install Android Studio:** Download and install Android Studio. In Android Studio, go to **Settings > Languages & Frameworks > Android SDK** and install the necessary SDKs.
+4.  **Run `flutter doctor`:** Open a terminal and run `flutter doctor` to check if you have all the necessary components. It will guide you through any missing steps.
+
+#### On Windows
+1.  **Install Git:** Make sure you have Git installed.
+2.  **Install Android Studio:** Download and install Android Studio. In Android Studio, go to **Settings > Languages & Frameworks > Android SDK** and install the necessary SDKs.
+3.  **Set up Android Emulator:** Create and configure an Android Virtual Device (AVD) in Android Studio's AVD Manager.
+4.  **Run `flutter doctor`:** Open PowerShell or Command Prompt and run `flutter doctor`. It will tell you if you need to install any additional components.
 
 ### Installation
 
