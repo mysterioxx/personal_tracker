@@ -156,26 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
 // --- PAGE 1: DASHBOARD --- (Code is in dashboard1.dart)
 
 // --- PAGE 2: ANALYTICS --- (Code is in analytics_page.dart)
-// The code for the analytics page is now in its own file.
 // We keep this placeholder class to ensure it can be imported.
-class AnalyticsPage extends StatelessWidget {
-  const AnalyticsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics'),
-      ),
-      body: const Center(
-        child: Text(
-          'Graphs for your spending and habits will be here.',
-          style: TextStyle(fontSize: 18),
-        ),
-      ),
-    );
-  }
-}
 
 
 // --- PAGE 3: SETTINGS --- (Code is in settings_page.dart)

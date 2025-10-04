@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Add this line
 
 // Standalone function to launch a URL.
 Future<void> _launchUrl(String url) async {
@@ -11,8 +12,35 @@ Future<void> _launchUrl(String url) async {
   }
 }
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  // State for the custom color sliders
+  double _red = 0;
+  double _green = 0;
+  double _blue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomColors();
+  }
+
+  Future<void> _loadCustomColors() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _red = (prefs.getInt(ThemeProvider.customRKey) ?? 0).toDouble();
+        _green = (prefs.getInt(ThemeProvider.customGKey) ?? 0).toDouble();
+        _blue = (prefs.getInt(ThemeProvider.customBKey) ?? 0).toDouble();
+      });
+    }
+  }
 
   // A new method to show the contact details modal.
   void _showContactDetails(BuildContext context) {
@@ -70,6 +98,45 @@ class SettingsPage extends StatelessWidget {
                     _buildThemeRadioTile('Grape Theme 🍇', 'grape', themeProvider),
                     _buildThemeRadioTile('Peach Theme 🍑', 'peach', themeProvider),
                   ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // --- NEW CUSTOM THEME SLIDER SECTION ---
+              const Text('Custom Theme', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Card(
+                elevation: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      _buildColorSlider('Red', Colors.red, _red, (value) => setState(() => _red = value)),
+                      _buildColorSlider('Green', Colors.green, _green, (value) => setState(() => _green = value)),
+                      _buildColorSlider('Blue', Colors.blue, _blue, (value) => setState(() => _blue = value)),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Color.fromRGBO(_red.toInt(), _green.toInt(), _blue.toInt(), 1),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.grey),
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => themeProvider.setCustomTheme(_red.toInt(), _green.toInt(), _blue.toInt()),
+                              child: const Text('Apply Custom Theme'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -144,9 +211,8 @@ class SettingsPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
 
-              // New About Section
+              const SizedBox(height: 20),
               const Text('About', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Card(
@@ -196,6 +262,26 @@ class SettingsPage extends StatelessWidget {
       value: value,
       groupValue: themeProvider.themeName,
       onChanged: (newValue) => themeProvider.setTheme(newValue!),
+    );
+  }
+
+  Widget _buildColorSlider(String label, Color color, double value, Function(double) onChanged) {
+    return Row(
+      children: [
+        Text(label, style: TextStyle(color: color)),
+        Expanded(
+          child: Slider(
+            value: value,
+            min: 0,
+            max: 255,
+            divisions: 255,
+            activeColor: color,
+            inactiveColor: color.withOpacity(0.3),
+            onChanged: onChanged,
+          ),
+        ),
+        Text(value.toInt().toString(), style: TextStyle(color: color)),
+      ],
     );
   }
 }
