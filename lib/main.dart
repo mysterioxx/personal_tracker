@@ -9,6 +9,9 @@ import 'settings_page.dart';
 import 'package:provider/provider.dart';
 // Import our new theme provider file
 import 'theme_provider.dart';
+// Import the new analytics page file
+import 'analytics_page.dart';
+
 
 // --- STEP 1: THE STARTING POINT OF THE APP ---
 
@@ -42,16 +45,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // We listen to the theme provider to get the current theme.
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final themeName = themeProvider.themeName;
 
     // MaterialApp now gets its theme from the provider.
     return MaterialApp(
       title: 'Personal Tracker', // The title of the app (used by the OS).
 
-      // 'theme' defines the colors, fonts, etc., for the standard LIGHT MODE.
+      // `themeMode` is set based on the theme name.
+      themeMode: themeName == 'dark' ? ThemeMode.dark : (themeName == 'system' ? ThemeMode.system : ThemeMode.light),
+
+      // `theme` is set to the current theme from the provider.
       theme: themeProvider.currentTheme,
-      darkTheme: ThemeProvider.darkTheme, // We keep a separate dark theme definition for the system default.
-      // themeMode is set based on the theme name.
-      themeMode: themeProvider.themeName == 'system' ? ThemeMode.system : ThemeMode.light,
+
+      // `darkTheme` is used for the system dark mode, so we use a standard dark theme.
+      darkTheme: ThemeData.dark(),
 
       // 'home' is the first screen the user will see. We point it to our 'MyHomePage'.
       home: const MyHomePage(),
@@ -148,8 +155,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
 // --- PAGE 1: DASHBOARD --- (Code is in dashboard1.dart)
 
-// --- PAGE 2: ANALYTICS (Placeholder) ---
-// This is a StatelessWidget because it's just displaying static text for now.
+// --- PAGE 2: ANALYTICS --- (Code is in analytics_page.dart)
+// The code for the analytics page is now in its own file.
+// We keep this placeholder class to ensure it can be imported.
 class AnalyticsPage extends StatelessWidget {
   const AnalyticsPage({super.key});
 
@@ -168,6 +176,7 @@ class AnalyticsPage extends StatelessWidget {
     );
   }
 }
+
 
 // --- PAGE 3: SETTINGS --- (Code is in settings_page.dart)
 
@@ -203,10 +212,31 @@ class _FavoritesPageState extends State<FavoritesPage> {
     });
   }
 
+  // --- FUNCTION TO SAVE FAVORITES ---
+  // A new function to save the reordered list.
+  Future<void> _saveFavorites() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('favorites', _favorites);
+  }
+
+  // --- THE DRAG-AND-DROP REORDER LOGIC ---
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      // If the item is dragged down, it will shift one position up.
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      // We remove the item from its old position.
+      final item = _favorites.removeAt(oldIndex);
+      // And insert it into its new position.
+      _favorites.insert(newIndex, item);
+      _saveFavorites(); // Save the new order to storage.
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final textColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       appBar: AppBar(
@@ -217,21 +247,38 @@ class _FavoritesPageState extends State<FavoritesPage> {
           ? Center(
         child: Text(
           'You have no favorite quotes yet!',
-          style: TextStyle(fontSize: 18, color: textColor.withOpacity(0.6)),
+          style: TextStyle(
+            fontSize: 18,
+            color: textColor.withOpacity(0.6),
+          ),
           textAlign: TextAlign.center,
         ),
       )
-      // If the list is not empty, display it using a ListView.
-          : ListView.builder(
+      // If the list is not empty, display it using a ReorderableListView.
+          : ReorderableListView.builder(
         itemCount: _favorites.length,
+        // The `onReorder` callback is triggered when an item is dropped.
+        onReorder: _onReorder,
         itemBuilder: (context, index) {
-          // Return a Card with a ListTile for each quote.
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: ListTile(
-              title: Text(
-                _favorites[index],
-                style: TextStyle(fontSize: 16, color: textColor),
+          // Each item needs a unique `key`.
+          final item = _favorites[index];
+          return Padding(
+            key: ValueKey(item),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                title: Text(
+                  item,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: textColor,
+                  ),
+                ),
+                // Add a drag handle for better user experience.
+                trailing: const Icon(Icons.drag_handle_rounded),
               ),
             ),
           );
