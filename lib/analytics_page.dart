@@ -17,8 +17,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   String _selectedGraphType = 'line';
   int _totalTasksInPeriod = 0;
   int _completedTasksInPeriod = 0;
+  int _pendingTasksInPeriod = 0; // NEW: Added a variable for pending tasks
   double _completionPercentage = 0.0;
-  List<FlSpot> _chartData = [];
+  List<FlSpot> _chartDataCompleted = [];
+  List<FlSpot> _chartDataPending = [];
 
   @override
   void initState() {
@@ -36,76 +38,75 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   Future<void> _loadTasksAndAnalytics() async {
     final prefs = await SharedPreferences.getInstance();
     final savedHistory = prefs.getStringList('tasks_history') ?? [];
+    // NEW: Also load tasks that are currently pending.
+    final savedPending = prefs.getStringList('tasks') ?? [];
 
     final history = savedHistory.map((e) => Task.fromJson(jsonDecode(e))).toList();
+    final pending = savedPending.map((e) => Task.fromJson(jsonDecode(e))).toList();
 
     if (mounted) {
       setState(() {
-        _tasksHistory = history;
+        _tasksHistory = history + pending; // Combine all tasks for analysis
         _calculateAnalytics();
       });
     }
   }
 
   void _calculateAnalytics() {
-    _chartData.clear();
+    _chartDataCompleted.clear();
+    _chartDataPending.clear();
     _totalTasksInPeriod = 0;
     _completedTasksInPeriod = 0;
 
     final now = DateTime.now();
     List<Task> relevantTasks = [];
+    final int daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final int daysToDisplay = _selectedTimeframe == '1day' ? 24 : (_selectedTimeframe == '7day' ? 7 : daysInMonth);
 
     if (_selectedTimeframe == '1day') {
       relevantTasks = _tasksHistory.where((task) =>
       task.createdDate.year == now.year && task.createdDate.month == now.month && task.createdDate.day == now.day).toList();
-      _totalTasksInPeriod = relevantTasks.length;
-      _completedTasksInPeriod = relevantTasks.where((task) => task.isCompleted).length;
-
-      final Map<int, int> completedPerHour = {};
-      for (int i = 0; i < 24; i++) completedPerHour[i] = 0;
-      relevantTasks.where((task) => task.isCompleted).forEach((task) {
-        completedPerHour[task.createdDate.hour] = (completedPerHour[task.createdDate.hour] ?? 0) + 1;
-      });
-      _chartData = completedPerHour.entries.map((e) => FlSpot(e.key.toDouble(), e.value.toDouble())).toList();
-
     } else if (_selectedTimeframe == '7day') {
       relevantTasks = _tasksHistory.where((task) =>
           task.createdDate.isAfter(now.subtract(const Duration(days: 7)))).toList();
-      _totalTasksInPeriod = relevantTasks.length;
-      _completedTasksInPeriod = relevantTasks.where((task) => task.isCompleted).length;
-
-      final Map<int, int> completedPerDay = {};
-      for (int i = 0; i < 7; i++) completedPerDay[i] = 0;
-      relevantTasks.where((task) => task.isCompleted).forEach((task) {
-        final daysAgo = now.difference(task.createdDate).inDays;
-        if (daysAgo >= 0 && daysAgo < 7) {
-          completedPerDay[6 - daysAgo] = (completedPerDay[6 - daysAgo] ?? 0) + 1;
-        }
-      });
-      _chartData = completedPerDay.entries.map((e) => FlSpot(e.key.toDouble(), e.value.toDouble())).toList();
-
     } else if (_selectedTimeframe == '30day') {
       relevantTasks = _tasksHistory.where((task) =>
-          task.createdDate.isAfter(now.subtract(const Duration(days: 30)))).toList();
-      _totalTasksInPeriod = relevantTasks.length;
-      _completedTasksInPeriod = relevantTasks.where((task) => task.isCompleted).length;
-
-      final Map<int, int> completedPerDay = {};
-      for (int i = 0; i < 30; i++) completedPerDay[i] = 0;
-      relevantTasks.where((task) => task.isCompleted).forEach((task) {
-        final daysAgo = now.difference(task.createdDate).inDays;
-        if (daysAgo >= 0 && daysAgo < 30) {
-          completedPerDay[29 - daysAgo] = (completedPerDay[29 - daysAgo] ?? 0) + 1;
-        }
-      });
-      _chartData = completedPerDay.entries.map((e) => FlSpot(e.key.toDouble(), e.value.toDouble())).toList();
+          task.createdDate.isAfter(now.subtract(Duration(days: daysInMonth)))).toList();
     }
 
+    _totalTasksInPeriod = relevantTasks.length;
+    _completedTasksInPeriod = relevantTasks.where((task) => task.isCompleted).length;
+    _pendingTasksInPeriod = _totalTasksInPeriod - _completedTasksInPeriod;
     _completionPercentage = _totalTasksInPeriod > 0 ? (_completedTasksInPeriod / _totalTasksInPeriod) * 100 : 0.0;
+
+    final Map<int, int> completedData = {};
+    final Map<int, int> pendingData = {};
+    for (int i = 0; i < daysToDisplay; i++) {
+      completedData[i] = 0;
+      pendingData[i] = 0;
+    }
+
+    relevantTasks.forEach((task) {
+      int index;
+      if (_selectedTimeframe == '1day') {
+        index = task.createdDate.hour;
+      } else {
+        final daysAgo = now.difference(task.createdDate).inDays;
+        index = (daysToDisplay - 1) - daysAgo;
+      }
+      if (task.isCompleted) {
+        completedData[index] = (completedData[index] ?? 0) + 1;
+      } else {
+        pendingData[index] = (pendingData[index] ?? 0) + 1;
+      }
+    });
+
+    _chartDataCompleted = completedData.entries.map((e) => FlSpot(e.key.toDouble(), e.value.toDouble())).toList();
+    _chartDataPending = pendingData.entries.map((e) => FlSpot(e.key.toDouble(), e.value.toDouble())).toList();
   }
 
   Widget _buildGraph() {
-    if (_chartData.isEmpty) {
+    if (_chartDataCompleted.isEmpty && _chartDataPending.isEmpty) {
       return const Center(child: Text('No data for this period.'));
     }
 
@@ -116,35 +117,36 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         LineChartData(
           lineBarsData: [
             LineChartBarData(
-              spots: _chartData,
+              spots: _chartDataCompleted,
               isCurved: true,
-              color: Theme.of(context).colorScheme.primary,
+              color: Colors.green, // Completed tasks
               barWidth: 3,
               isStrokeCapRound: true,
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                    Theme.of(context).colorScheme.primary.withOpacity(0),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
+              belowBarData: BarAreaData(show: false),
+            ),
+            LineChartBarData(
+              spots: _chartDataPending,
+              isCurved: true,
+              color: Colors.red, // Pending tasks
+              barWidth: 3,
+              isStrokeCapRound: true,
+              belowBarData: BarAreaData(show: false),
             ),
           ],
           titlesData: const FlTitlesData(show: false),
           borderData: FlBorderData(show: false),
           gridData: const FlGridData(show: false),
-          minX: 0, maxX: _chartData.length.toDouble() - 1, minY: 0, maxY: maxY,
+          minX: 0, maxX: _chartDataCompleted.length.toDouble() - 1, minY: 0, maxY: maxY,
         ),
       );
     } else { // Scatter plot
       return ScatterChart(
         ScatterChartData(
-          scatterSpots: _chartData.map((spot) => ScatterSpot(spot.x, spot.y)).toList(),
-          minX: 0, maxX: _chartData.length.toDouble() - 1, minY: 0, maxY: maxY,
+          scatterSpots: [
+            ..._chartDataCompleted.map((spot) => ScatterSpot(spot.x, spot.y)).toList(),
+            ..._chartDataPending.map((spot) => ScatterSpot(spot.x, spot.y)).toList(),
+          ],
+          minX: 0, maxX: _chartDataCompleted.length.toDouble() - 1, minY: 0, maxY: maxY,
           scatterTouchData: ScatterTouchData(enabled: false),
           borderData: FlBorderData(show: false),
           gridData: const FlGridData(show: false),
@@ -212,7 +214,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildSummaryCard('Completed', '$_completedTasksInPeriod'),
-          _buildSummaryCard('Total', '$_totalTasksInPeriod'),
+          _buildSummaryCard('Pending', '$_pendingTasksInPeriod'),
           _buildSummaryCard('Completion', '${_completionPercentage.toStringAsFixed(0)}%'),
         ],
       ),
