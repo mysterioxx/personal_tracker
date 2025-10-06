@@ -215,6 +215,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
     });
   }
 
+  // --- NEW FUNCTION TO REMOVE A FAVORITE QUOTE ---
+  void _removeFavorite(int index) {
+    setState(() {
+      _favorites.removeAt(index);
+      _saveFavorites(); // Save the updated list to storage.
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final textColor = Theme.of(context).colorScheme.onSurface;
@@ -223,7 +231,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
       appBar: AppBar(
         title: const Text('Favorites'),
       ),
-      // Check if the list of favorites is empty and display a message if so.
       body: _favorites.isEmpty
           ? Center(
         child: Text(
@@ -235,13 +242,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
           textAlign: TextAlign.center,
         ),
       )
-      // If the list is not empty, display it using a ReorderableListView.
           : ReorderableListView.builder(
         itemCount: _favorites.length,
-        // The `onReorder` callback is triggered when an item is dropped.
         onReorder: _onReorder,
         itemBuilder: (context, index) {
-          // Each item needs a unique `key`.
           final item = _favorites[index];
           return Padding(
             key: ValueKey(item),
@@ -258,8 +262,19 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     color: textColor,
                   ),
                 ),
-                // Add a drag handle for better user experience.
-                trailing: const Icon(Icons.drag_handle_rounded),
+                // We now use a Row for the trailing actions.
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Remove button
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _removeFavorite(index),
+                    ),
+                    // Drag handle
+                    const Icon(Icons.drag_handle_rounded),
+                  ],
+                ),
               ),
             ),
           );
