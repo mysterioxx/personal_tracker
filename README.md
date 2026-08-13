@@ -1,72 +1,140 @@
 # personal_tracker ✨
 
-A simple, beautiful, and intuitive personal tracker built with Flutter. This app helps you stay on track with your daily goals and find motivation with a modern, clean interface.
+A simple, beautiful, and intuitive personal productivity tracker built with Flutter. The app helps you stay on top of daily goals, review task history, track progress, and find daily motivation through a modern, responsive interface.
+
+---
 
 ## 🚀 Features
 
-* **Personalized Dashboard:** A minimalist dashboard featuring a daily motivational quote and a to-do list that saves your tasks. Tapping the quote shows a pop-up with a blurred background.
-* **Advanced To-Do List:** Create and manage tasks in a clean, vertical list. Your tasks are automatically saved and a history of completed tasks is available.
-* **Interactive Analytics:** Visualize your task completion progress with a dynamic graph, a numeric summary, and options to switch between different timeframes.
-* **Customizable Themes:** Switch between a variety of custom color palettes and a dynamic system theme directly from the Settings page.
-* **Reorderable Favorites:** Save your favorite quotes and reorder them with a simple drag-and-drop interface.
-* **Data Persistence:** All your tasks, favorites, and settings are saved locally on your device.
+- **Personalized Dashboard:** A minimalist dashboard featuring a daily motivational quote and a to-do list. Tapping the quote opens it in a focused pop-up with a blurred backdrop effect.
+- **Advanced To-Do List:** Create, complete, and manage tasks in a clean vertical list. Tasks are automatically saved, with a dedicated completion history.
+- **Interactive Analytics:** Visualize task completion progress using dynamic `fl_chart` graphs, numerical breakdowns, and selectable timeframes.
+- **Customizable Themes:** Choose from multiple custom color palettes and a dynamic system theme from the Settings page.
+- **Reorderable Favorites:** Save favorite quotes and reorder them using an intuitive drag-and-drop interface.
+- **Local Data Persistence:** Tasks, favorite quotes, preferences, and settings are stored locally on the device.
+
+---
 
 ## 🛠️ Technology Stack
 
-* **Flutter & Dart:** For building a beautiful, cross-platform app.
-* **`http`:** To fetch daily quotes from an external API.
-* **`shared_preferences`:** For local data storage and persistence.
-* **`provider`:** A robust state management solution for themes and preferences.
-* **`fl_chart`:** To create elegant and responsive data visualization graphs.
-* **`url_launcher`:** To open external links from the app.
-* **`flutter_launcher_icons`:** To generate a custom app icon.
+- **[Flutter](https://flutter.dev/) & [Dart](https://dart.dev/):** Cross-platform mobile application development.
+- **[`provider`](https://pub.dev/packages/provider):** State management for themes and preferences.
+- **[`shared_preferences`](https://pub.dev/packages/shared_preferences):** Local key-value storage and persistence.
+- **[`fl_chart`](https://pub.dev/packages/fl_chart):** Responsive charts and data visualization.
+- **[`http`](https://pub.dev/packages/http):** Fetching motivational quotes from remote APIs.
+- **[`url_launcher`](https://pub.dev/packages/url_launcher):** Opening external links from the application.
+- **[`flutter_launcher_icons`](https://pub.dev/packages/flutter_launcher_icons):** Generating native application icons.
+
+---
 
 ## 💻 Getting Started
 
-This guide will help you get the project up and running on your local machine.
+Follow the steps below to run the project locally.
 
 ### Prerequisites
 
-* **Flutter SDK:** Make sure you have the Flutter SDK installed on your system.
-* **Android Studio or VS Code:** You'll need a code editor with the Flutter and Dart extensions.
-* **Platform-specific Setup:** You must have a working setup for either Android or iOS development.
+Before getting started, make sure you have:
 
-### Flutter Setup Guides
+- **Flutter SDK:** The latest stable Flutter SDK.
+- **IDE:** Android Studio or VS Code with Flutter and Dart extensions.
+- **Android:** Android SDK and an emulator or physical Android device.
+- **iOS:** Xcode and CocoaPods on macOS.
 
-#### On macOS
-1.  **Install Xcode:** Install the latest version of Xcode from the Mac App Store.
-2.  **Install CocoaPods:** Open your terminal and run `sudo gem install cocoapods`.
-3.  **Install Android Studio:** Download and install Android Studio. In Android Studio, go to **Settings > Languages & Frameworks > Android SDK** and install the necessary SDKs.
-4.  **Run `flutter doctor`:** Open a terminal and run `flutter doctor` to check if you have all the necessary components. It will guide you through any missing steps.
+---
 
-#### On Windows
-1.  **Install Git:** Make sure you have Git installed.
-2.  **Install Android Studio:** Download and install Android Studio. In Android Studio, go to **Settings > Languages & Frameworks > Android SDK** and install the necessary SDKs.
-3.  **Set up Android Emulator:** Create and configure an Android Virtual Device (AVD) in Android Studio's AVD Manager.
-4.  **Run `flutter doctor`:** Open PowerShell or Command Prompt and run `flutter doctor`. It will tell you if you need to install any additional components.
+## ⚙️ Flutter Setup
 
-### Installation
+### macOS
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [git clone [https://github.com/bwnbits/personal_tracker.git](https://github.com/bwnbits/personal_tracker.git)
-    ```
-2.  **Navigate to the project directory:**
-    ```bash
-    cd personal_tracker
-    ```
-3.  **Install dependencies:**
-    ```bash
-    flutter pub get
-    ```
-4.  **Run the app:**
-    ```bash
-    flutter run
-    ```
-    *Note: If you encounter issues with the Dart SDK path, you can set it in your IDE settings.*
+1. Install the latest version of Xcode from the Mac App Store.
+2. Install CocoaPods if required:
 
-## 📖 Further Resources
+```bash
+sudo gem install cocoapods
+```
 
-* [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-* [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-* [Flutter Documentation](https://docs.flutter.dev/)
+3. Install Android Studio and configure the Android SDK.
+4. Verify your Flutter installation:
+
+```bash
+flutter doctor
+```
+
+5. Resolve any issues reported by `flutter doctor` before running the application.
+
+### Windows
+
+1. Install Git.
+2. Install Android Studio.
+3. Configure the required Android SDK packages.
+4. Create an Android Virtual Device (AVD) through Android Studio's Device Manager.
+5. Verify your Flutter installation:
+
+```powershell
+flutter doctor
+```
+
+---
+
+## 📥 Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/bwnbits/personal_tracker.git
+```
+
+### 2. Navigate to the project
+
+```bash
+cd personal_tracker
+```
+
+### 3. Install dependencies
+
+```bash
+flutter pub get
+```
+
+### 4. Run the application
+
+```bash
+flutter run
+```
+
+> **Note:** If Flutter cannot locate the Dart SDK, check your Flutter SDK path and IDE configuration.
+
+---
+
+## 📦 Releases & Downloads
+
+Stable builds and release tags are available on the project's GitHub Releases page.
+
+**Latest release:** [v2.3.2](https://github.com/bwnbits/personal_tracker/releases)
+
+Pre-built APK files can be downloaded from the assets section of the corresponding GitHub release.
+
+---
+
+## 📱 Supported Platforms
+
+The project is designed for cross-platform Flutter development and can be configured for:
+
+- Android
+- iOS
+- Other Flutter-supported platforms, depending on project configuration
+
+---
+
+## 📚 Further Resources
+
+- [Flutter Documentation](https://docs.flutter.dev/)
+- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Flutter Cookbook](https://docs.flutter.dev/cookbook)
+- [Dart Documentation](https://dart.dev/guides)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
