@@ -4,13 +4,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ThemeProvider with ChangeNotifier {
   ThemeData _currentTheme;
   String _themeName;
-  String _fontFamily; // NEW: Font family variable
+  String _fontFamily;
 
   bool _showCompletedCount = false;
   String _analyticsView = '7day';
   bool _animationsEnabled = true;
 
-  ThemeProvider(this._currentTheme, this._themeName, this._fontFamily, this._showCompletedCount, this._analyticsView, this._animationsEnabled);
+  ThemeProvider(
+    this._currentTheme,
+    this._themeName,
+    this._fontFamily,
+    this._showCompletedCount,
+    this._analyticsView,
+    this._animationsEnabled,
+  );
 
   ThemeData get currentTheme => _currentTheme;
   String get themeName => _themeName;
@@ -43,7 +50,7 @@ class ThemeProvider with ChangeNotifier {
   // Custom theme 1: Guava (Light mint green palette)
   static final ThemeData guavaTheme = ThemeData(
     brightness: Brightness.light,
-    primaryColor: const Color(0xFFB9E1D2), // Soft Green
+    primaryColor: const Color(0xFFB9E1D2),
     colorScheme: const ColorScheme.light(
       primary: Color(0xFFB9E1D2),
       onPrimary: Color(0xFF1B5E20),
@@ -58,7 +65,7 @@ class ThemeProvider with ChangeNotifier {
   // Custom theme 2: Pineapple (Light yellow/gold palette)
   static final ThemeData pineappleTheme = ThemeData(
     brightness: Brightness.light,
-    primaryColor: const Color(0xFFFFF07E), // Pastel Yellow
+    primaryColor: const Color(0xFFFFF07E),
     colorScheme: const ColorScheme.light(
       primary: Color(0xFFFFF07E),
       onPrimary: Colors.black,
@@ -101,7 +108,7 @@ class ThemeProvider with ChangeNotifier {
   // Custom theme 5: Peach (Pastel peach palette)
   static final ThemeData peachTheme = ThemeData(
     brightness: Brightness.light,
-    primaryColor: const Color(0xFFFFB347), // Pastel Orange
+    primaryColor: const Color(0xFFFFB347),
     colorScheme: const ColorScheme.light(
       primary: Color(0xFFFFB347),
       onPrimary: Colors.black,
@@ -112,36 +119,41 @@ class ThemeProvider with ChangeNotifier {
     useMaterial3: true,
   );
 
-  // --- NEW CUSTOM THEME LOGIC ---
+  // --- CUSTOM RGB KEYS ---
   static const String customThemeKey = 'custom_rgb';
   static const String customRKey = 'custom_r';
   static const String customGKey = 'custom_g';
   static const String customBKey = 'custom_b';
   static const String fontKey = 'font_family';
 
-  // Helper function to create custom theme
+  // Helper function to create custom theme with readable text contrast
   static ThemeData _createCustomTheme(int r, int g, int b) {
-    Color primary = Color.fromRGBO(r, g, b, 1);
-    Color secondary = Color.fromRGBO((r + 50).clamp(0, 255), (g + 50).clamp(0, 255), (b + 50).clamp(0, 255), 1);
-    Color background = Color.fromRGBO((r + 20).clamp(0, 255), (g + 20).clamp(0, 255), (b + 20).clamp(0, 255), 1);
-    Color onPrimary = primary.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final Color primary = Color.fromRGBO(r, g, b, 1);
+    final Color secondary = Color.fromRGBO((r + 40).clamp(0, 255), (g + 40).clamp(0, 255), (b + 40).clamp(0, 255), 1);
+    final Color background = Color.fromRGBO((r + 20).clamp(0, 255), (g + 20).clamp(0, 255), (b + 20).clamp(0, 255), 1);
+    
+    final bool isLight = primary.computeLuminance() > 0.5;
+    final Color textColor = isLight ? Colors.black : Colors.white;
 
     return ThemeData(
-      brightness: primary.computeLuminance() > 0.5 ? Brightness.light : Brightness.dark,
+      brightness: isLight ? Brightness.light : Brightness.dark,
       scaffoldBackgroundColor: background,
-      colorScheme: ColorScheme.light(
+      colorScheme: ColorScheme(
+        brightness: isLight ? Brightness.light : Brightness.dark,
         primary: primary,
-        onPrimary: onPrimary,
+        onPrimary: textColor,
         secondary: secondary,
-        onSecondary: Colors.black,
+        onSecondary: textColor,
+        error: Colors.red,
+        onError: Colors.white,
         surface: secondary,
-        onSurface: Colors.black,
+        onSurface: textColor,
       ),
       useMaterial3: true,
     );
   }
 
-  // Load the saved theme and preferences from local storage
+  // Load saved theme and preferences
   static Future<ThemeProvider> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     final savedTheme = prefs.getString('theme_preference') ?? 'system';
@@ -178,7 +190,6 @@ class ThemeProvider with ChangeNotifier {
       themeName = 'system';
     }
 
-    // Apply Font to Theme
     final finalTheme = baseTheme.copyWith(
       textTheme: baseTheme.textTheme.apply(
         fontFamily: fontMap[savedFont],
@@ -188,13 +199,12 @@ class ThemeProvider with ChangeNotifier {
     return ThemeProvider(finalTheme, themeName, savedFont, showCompletedCount, analyticsView, animationsEnabled);
   }
 
-  // Set new theme (Updated to re-apply font)
+  // Set new theme
   void setTheme(String themeName) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme_preference', themeName);
     _themeName = themeName;
 
-    // Logic to select the base theme
     ThemeData baseTheme;
     if (themeName == 'light') {
       baseTheme = lightTheme;
@@ -210,11 +220,15 @@ class ThemeProvider with ChangeNotifier {
       baseTheme = grapeTheme;
     } else if (themeName == 'peach') {
       baseTheme = peachTheme;
+    } else if (themeName == customThemeKey) {
+      final r = prefs.getInt(customRKey) ?? 0;
+      final g = prefs.getInt(customGKey) ?? 0;
+      final b = prefs.getInt(customBKey) ?? 0;
+      baseTheme = _createCustomTheme(r, g, b);
     } else {
-      baseTheme = lightTheme; // Default for system or unknown
+      baseTheme = lightTheme;
     }
 
-    // Apply the current font to the new base theme
     _currentTheme = baseTheme.copyWith(
       textTheme: baseTheme.textTheme.apply(fontFamily: fontMap[_fontFamily]),
     );
@@ -222,17 +236,16 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // NEW FUNCTION: Set Font Family
+  // Set Font Family
   void setFontFamily(String familyName) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(fontKey, familyName);
     _fontFamily = familyName;
 
-    // Re-apply current theme with new font
     setTheme(_themeName);
   }
 
-  // Set custom theme (Updated to persist RGB values)
+  // Set Custom Theme with RGB
   void setCustomTheme(int r, int g, int b) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme_preference', customThemeKey);
@@ -241,14 +254,14 @@ class ThemeProvider with ChangeNotifier {
     await prefs.setInt(customBKey, b);
     _themeName = customThemeKey;
 
-    // Re-apply custom theme with new RGB and existing font
-    _currentTheme = _createCustomTheme(r, g, b).copyWith(
-      textTheme: _createCustomTheme(r, g, b).textTheme.apply(fontFamily: fontMap[_fontFamily]),
+    final customBase = _createCustomTheme(r, g, b);
+    _currentTheme = customBase.copyWith(
+      textTheme: customBase.textTheme.apply(fontFamily: fontMap[_fontFamily]),
     );
     notifyListeners();
   }
 
-  // Set other preferences
+  // Set Preferences
   void setShowCompletedCount(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('show_completed_count', value);

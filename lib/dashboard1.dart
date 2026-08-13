@@ -1,4 +1,3 @@
-//immports for making HTTP requests, handling JSON data, and Flutter widgets.
 import 'package:flutter/material.dart';
 import 'dart:ui'; // Import this for ImageFilter
 import 'package:http/http.dart' as http;
@@ -6,27 +5,31 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'analytics_page.dart'; // Import for navigation
 
-// --- A new class to represent a Task with its properties ---
+// --- A class to represent a Task with its properties ---
 class Task {
   String name;
   bool isCompleted;
   DateTime createdDate;
 
-  Task({required this.name, this.isCompleted = false, required this.createdDate});
+  Task({
+    required this.name,
+    this.isCompleted = false,
+    required this.createdDate,
+  });
 
   // Convert a Task object to a JSON map for saving.
   Map<String, dynamic> toJson() => {
-    'name': name,
-    'isCompleted': isCompleted,
-    'createdDate': createdDate.toIso8601String(),
-  };
+        'name': name,
+        'isCompleted': isCompleted,
+        'createdDate': createdDate.toIso8601String(),
+      };
 
   // Create a Task object from a JSON map.
   factory Task.fromJson(Map<String, dynamic> json) => Task(
-    name: json['name'],
-    isCompleted: json['isCompleted'] ?? false,
-    createdDate: DateTime.parse(json['createdDate']),
-  );
+        name: json['name'],
+        isCompleted: json['isCompleted'] ?? false,
+        createdDate: DateTime.parse(json['createdDate']),
+      );
 }
 
 // --- PAGE 1: DASHBOARD ---
@@ -41,38 +44,39 @@ class _DashboardPageState extends State<DashboardPage> {
   late Future<Map<String, dynamic>> _quoteFuture;
   final List<Task> _tasks = [];
   final List<Task> _tasksHistory = [];
-  final List<Map<String, dynamic>> _quoteHistory = []; // NEW: List to store old quotes
+  final List<Map<String, dynamic>> _quoteHistory = [];
 
   final TextEditingController _taskController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadQuoteHistory(); // NEW: Load quote history on startup
-    _quoteFuture = _getQuote(false); // Fetch a new quote (don't force)
+    _loadQuoteHistory();
+    _quoteFuture = _getQuote(false);
     _loadTasks();
   }
 
-  // --- NEW FUNCTION: Load Quote History from storage ---
+  // --- Load Quote History from storage ---
   Future<void> _loadQuoteHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final savedQuotes = prefs.getStringList('quote_history') ?? [];
     if (mounted) {
       setState(() {
         _quoteHistory.clear();
-        _quoteHistory.addAll(savedQuotes.map((e) => jsonDecode(e) as Map<String, dynamic>));
+        _quoteHistory.addAll(
+            savedQuotes.map((e) => jsonDecode(e) as Map<String, dynamic>));
       });
     }
   }
 
-  // --- NEW FUNCTION: Save Quote History to storage ---
+  // --- Save Quote History to storage ---
   Future<void> _saveQuoteHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final historyJson = _quoteHistory.map((e) => jsonEncode(e)).toList();
     await prefs.setStringList('quote_history', historyJson);
   }
 
-  // --- FUNCTION TO LOAD TASKS ---
+  // --- LOAD TASKS ---
   Future<void> _loadTasks() async {
     final prefs = await SharedPreferences.getInstance();
     final savedTasks = prefs.getStringList('tasks') ?? [];
@@ -88,7 +92,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // --- FUNCTION TO SAVE TASKS ---
+  // --- SAVE TASKS ---
   Future<void> _saveTasks() async {
     final prefs = await SharedPreferences.getInstance();
     final tasksJson = _tasks.map((e) => jsonEncode(e.toJson())).toList();
@@ -97,7 +101,7 @@ class _DashboardPageState extends State<DashboardPage> {
     await prefs.setStringList('tasks_history', historyJson);
   }
 
-  // --- THE ASYNCHRONOUS API CALL FUNCTION (Modified) ---
+  // --- ASYNCHRONOUS API CALL FUNCTION ---
   Future<Map<String, dynamic>> _getQuote(bool forceRefresh) async {
     final prefs = await SharedPreferences.getInstance();
     final savedQuote = prefs.getString('saved_quote');
@@ -125,25 +129,30 @@ class _DashboardPageState extends State<DashboardPage> {
         await prefs.setString('saved_author', data['a']);
         return data;
       } else {
-        throw Exception('Failed to load quote with status code: ${response.statusCode}');
+        throw Exception('Failed to load quote: ${response.statusCode}');
       }
     } catch (e) {
+      if (savedQuote != null && savedAuthor != null) {
+        return {'q': savedQuote, 'a': savedAuthor};
+      }
       throw Exception('Could not connect to the server.');
     }
   }
 
-  // --- NEW FUNCTION: Refresh Quote (Triggers API call) ---
   void _refreshQuote() {
     setState(() {
       _quoteFuture = _getQuote(true);
     });
   }
 
-  // --- NEW FUNCTION: Show Quote History Modal ---
+  // --- SHOW QUOTE HISTORY MODAL ---
   void _showQuoteHistory() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (BuildContext context) {
         return SizedBox(
           height: MediaQuery.of(context).size.height * 0.75,
@@ -152,6 +161,9 @@ class _DashboardPageState extends State<DashboardPage> {
               AppBar(
                 title: const Text('Quote History'),
                 automaticallyImplyLeading: false,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -163,15 +175,19 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: _quoteHistory.isEmpty
                     ? const Center(child: Text('No previous quotes!'))
                     : ListView.builder(
-                  itemCount: _quoteHistory.length,
-                  itemBuilder: (context, index) {
-                    final quoteData = _quoteHistory[index];
-                    return ListTile(
-                      title: Text('"${quoteData['q']}"'),
-                      subtitle: Text('- ${quoteData['a']}'),
-                    );
-                  },
-                ),
+                        itemCount: _quoteHistory.length,
+                        itemBuilder: (context, index) {
+                          final quoteData = _quoteHistory[index];
+                          return ListTile(
+                            title: Text('"${quoteData['q']}"'),
+                            subtitle: Text('- ${quoteData['a']}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.star_border, color: Colors.amber),
+                              onPressed: () => _favoriteQuote(quoteData['q'], quoteData['a']),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -180,11 +196,12 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // --- FUNCTION TO ADD A TASK ---
+  // --- ADD A TASK ---
   void _addTask() {
-    if (_taskController.text.isNotEmpty) {
+    final text = _taskController.text.trim();
+    if (text.isNotEmpty) {
       setState(() {
-        final newTask = Task(name: _taskController.text, createdDate: DateTime.now());
+        final newTask = Task(name: text, createdDate: DateTime.now());
         _tasks.add(newTask);
         _taskController.clear();
       });
@@ -192,7 +209,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // --- FUNCTION TO REMOVE A TASK (and move to history) ---
+  // --- COMPLETE A TASK ---
   void _completeTask(int index) {
     setState(() {
       final completedTask = _tasks.removeAt(index);
@@ -202,7 +219,18 @@ class _DashboardPageState extends State<DashboardPage> {
     _saveTasks();
   }
 
-  // --- FUNCTION FOR FAVORITING A QUOTE ---
+  // --- RESTORE TASK FROM HISTORY ---
+  void _restoreTask(int index) {
+    setState(() {
+      final restoredTask = _tasksHistory.removeAt(index);
+      restoredTask.isCompleted = false;
+      _tasks.add(restoredTask);
+    });
+    _saveTasks();
+    Navigator.pop(context);
+  }
+
+  // --- FAVORITING A QUOTE ---
   Future<void> _favoriteQuote(String quote, String author) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> favorites = prefs.getStringList('favorites') ?? [];
@@ -218,17 +246,20 @@ class _DashboardPageState extends State<DashboardPage> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This quote is already in your favorites.')),
+          const SnackBar(content: Text('Quote is already in your favorites.')),
         );
       }
     }
   }
 
-  // --- FUNCTION TO SHOW TASK HISTORY MODAL ---
+  // --- SHOW TASK HISTORY MODAL ---
   void _showTaskHistory() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (BuildContext context) {
         return SizedBox(
           height: MediaQuery.of(context).size.height * 0.75,
@@ -237,6 +268,9 @@ class _DashboardPageState extends State<DashboardPage> {
               AppBar(
                 title: const Text('Task History'),
                 automaticallyImplyLeading: false,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -248,21 +282,27 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: _tasksHistory.isEmpty
                     ? const Center(child: Text('No completed tasks yet!'))
                     : ListView.builder(
-                  itemCount: _tasksHistory.length,
-                  itemBuilder: (context, index) {
-                    final task = _tasksHistory[index];
-                    return ListTile(
-                      title: Text(task.name),
-                      subtitle: Text('Completed on: ${task.createdDate.toString().split(' ')[0]}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          _deleteHistoryTask(index);
+                        itemCount: _tasksHistory.length,
+                        itemBuilder: (context, index) {
+                          final task = _tasksHistory[index];
+                          return ListTile(
+                            title: Text(
+                              task.name,
+                              style: const TextStyle(decoration: TextDecoration.lineThrough),
+                            ),
+                            subtitle: Text('Completed on: ${task.createdDate.toString().split(' ')[0]}'),
+                            leading: IconButton(
+                              icon: const Icon(Icons.undo, color: Colors.blue),
+                              tooltip: 'Restore to active list',
+                              onPressed: () => _restoreTask(index),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteHistoryTask(index),
+                            ),
+                          );
                         },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
@@ -271,7 +311,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // --- FUNCTION TO DELETE A TASK FROM HISTORY ---
   void _deleteHistoryTask(int index) {
     setState(() {
       _tasksHistory.removeAt(index);
@@ -279,11 +318,12 @@ class _DashboardPageState extends State<DashboardPage> {
     _saveTasks();
   }
 
-  // --- FUNCTION TO SHOW POP-OUT QUOTE MODAL (BLUR BACKGROUND) ---
+  // --- SHOW POP-OUT QUOTE MODAL ---
   Future<void> _showQuoteModal(String quote, String author) async {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
+      barrierLabel: 'Quote Modal',
       barrierColor: Colors.black.withOpacity(0.8),
       transitionDuration: const Duration(milliseconds: 200),
       transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -309,7 +349,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     Text(
                       '"$quote"',
                       style: const TextStyle(
-                        fontSize: 22,
+                        fontSize: 20,
                         fontStyle: FontStyle.italic,
                       ),
                       textAlign: TextAlign.center,
@@ -317,7 +357,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 12),
                     Text(
                       '- $author',
-                      style: const TextStyle(fontSize: 18),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.right,
                     ),
                   ],
@@ -330,6 +370,13 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  void _clearAllTasks() {
+    setState(() {
+      _tasks.clear();
+    });
+    _saveTasks();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -338,6 +385,7 @@ class _DashboardPageState extends State<DashboardPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.history_edu_rounded),
+            tooltip: 'Completed Tasks',
             onPressed: _showTaskHistory,
           ),
         ],
@@ -361,7 +409,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         elevation: 4,
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Text('Error: ${snapshot.error}', textAlign: TextAlign.center),
+                          child: Center(
+                            child: Text(
+                              'Error loading quote: ${snapshot.error}',
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ),
                       );
                     } else {
@@ -371,36 +424,36 @@ class _DashboardPageState extends State<DashboardPage> {
 
                       return Card(
                         elevation: 4,
-                        child: GestureDetector(
+                        child: InkWell(
                           onTap: () => _showQuoteModal(quote, author),
+                          borderRadius: BorderRadius.circular(12),
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: Text(
+                                      '"$quote"',
+                                      style: const TextStyle(
+                                          fontSize: 16, fontStyle: FontStyle.italic),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Expanded(
-                                      child: Text(
-                                        '"$quote"',
-                                        style: const TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                    Text(
+                                      '- $author',
+                                      style: const TextStyle(
+                                          fontSize: 14, fontWeight: FontWeight.bold),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.star_border, color: Colors.amber),
                                       onPressed: () => _favoriteQuote(quote, author),
                                     ),
                                   ],
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  '- $author',
-                                  style: const TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.right,
                                 ),
                               ],
                             ),
@@ -411,20 +464,18 @@ class _DashboardPageState extends State<DashboardPage> {
                   },
                 ),
               ),
-              const SizedBox(height: 10), // A little space between the quote card and buttons
+              const SizedBox(height: 10),
 
-              // --- NEW: QUOTE BUTTONS SECTION ---
+              // --- QUOTE BUTTONS SECTION ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Refresh button
                   TextButton.icon(
                     onPressed: _refreshQuote,
                     icon: const Icon(Icons.refresh),
                     label: const Text('Refresh Quote'),
                   ),
                   const SizedBox(width: 10),
-                  // History button
                   TextButton.icon(
                     onPressed: _showQuoteHistory,
                     icon: const Icon(Icons.history),
@@ -432,7 +483,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
               // --- ANALYTICS QUICK-ACTION SECTION ---
               GestureDetector(
@@ -443,7 +494,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   );
                 },
                 child: Card(
-                  elevation: 4,
+                  elevation: 2,
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
@@ -452,101 +503,95 @@ class _DashboardPageState extends State<DashboardPage> {
                         const SizedBox(width: 10),
                         const Text(
                           'View your progress on Analytics',
-                          style: TextStyle(fontSize: 16),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                         const Spacer(),
-                        Icon(Icons.arrow_forward_ios, color: Colors.grey.shade400),
+                        Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
                       ],
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
               // --- TO-DO LIST HEADER ---
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('To-Do List', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    const Text('To-Do List', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     if (_tasks.isNotEmpty)
                       TextButton(
                         onPressed: _clearAllTasks,
-                        child: const Text('Clear All'),
+                        child: const Text('Clear All', style: TextStyle(color: Colors.red)),
                       ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
               // --- TASK INPUT SECTION ---
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: TextField(
-                  controller: _taskController,
-                  decoration: InputDecoration(
-                    hintText: 'Add a new task...',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: _addTask,
-                    ),
+              TextField(
+                controller: _taskController,
+                decoration: InputDecoration(
+                  hintText: 'Add a new task...',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.add_circle, color: Colors.blue),
+                    onPressed: _addTask,
                   ),
-                  onSubmitted: (_) => _addTask(),
                 ),
+                onSubmitted: (_) => _addTask(),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // --- VERTICAL TASK LIST ---
               SizedBox(
-                height: 250,
+                height: 300,
                 child: _tasks.isEmpty
-                    ? const Center(child: Text('No tasks to display!'))
-                    : ListView.builder(
-                  itemCount: _tasks.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Card(
-                        elevation: 4,
-                        child: ListTile(
-                          title: Text(
-                            _tasks[index].name,
-                            style: TextStyle(
-                              fontSize: 16,
-                              decoration: _tasks[index].isCompleted
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
-                            ),
-                          ),
-                          trailing: Checkbox(
-                            value: _tasks[index].isCompleted,
-                            onChanged: (bool? value) {
-                              if (value == true) {
-                                _completeTask(index);
-                              }
-                            },
-                          ),
+                    ? const Center(
+                        child: Text(
+                          'No active tasks. Add one above!',
+                          style: TextStyle(color: Colors.grey),
                         ),
+                      )
+                    : ListView.builder(
+                        itemCount: _tasks.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Card(
+                              elevation: 2,
+                              child: ListTile(
+                                title: Text(
+                                  _tasks[index].name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    decoration: _tasks[index].isCompleted
+                                        ? TextDecoration.lineThrough
+                                        : TextDecoration.none,
+                                  ),
+                                ),
+                                trailing: Checkbox(
+                                  value: _tasks[index].isCompleted,
+                                  onChanged: (bool? value) {
+                                    if (value == true) {
+                                      _completeTask(index);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  // --- NEW FUNCTION: Clear all tasks from the list ---
-  void _clearAllTasks() {
-    setState(() {
-      _tasks.clear();
-    });
-    _saveTasks();
   }
 }

@@ -7,7 +7,7 @@ import 'netpulse/network_speed_service.dart';
 
 Future<void> _launchUrl(String url) async {
   final Uri uri = Uri.parse(url);
-  if (!await launchUrl(uri)) {
+  if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
     throw Exception('Could not launch $uri');
   }
 }
@@ -54,7 +54,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // ✅ UPDATED CONTACT MODAL
   void _showContactDetails(BuildContext context) {
     showDialog(
       context: context,
@@ -67,23 +66,23 @@ class _SettingsPageState extends State<SettingsPage> {
             const Text('Abhishek Ruhela', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             const Text('Email: abhishekruhela@duck.com'),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
 
             GestureDetector(
               onTap: () => _launchUrl('https://linkedin.com/in/abhishekruhela'),
               child: const Text(
                 'LinkedIn: linkedin.com/in/abhishekruhela',
-                style: TextStyle(color: Colors.blue),
+                style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
               ),
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
 
             GestureDetector(
               onTap: () => _launchUrl('https://github.com/bwnbits'),
               child: const Text(
                 'GitHub: github.com/bwnbits',
-                style: TextStyle(color: Colors.blue),
+                style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
               ),
             ),
           ],
@@ -110,27 +109,42 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-              const Text('Appearance', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              // --- APPEARANCE ---
+              const Text('Appearance', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Card(
-                child: Column(
-                  children: [
-                    _buildThemeRadioTile('System Default', 'system', themeProvider),
-                    _buildThemeRadioTile('Light', 'light', themeProvider),
-                    _buildThemeRadioTile('Dark', 'dark', themeProvider),
-                    _buildThemeRadioTile('Guava Theme', 'guava', themeProvider),
-                    _buildThemeRadioTile('Pineapple Theme', 'pineapple', themeProvider),
-                    _buildThemeRadioTile('Greyscale', 'greyscale', themeProvider),
-                    _buildThemeRadioTile('Grape Theme', 'grape', themeProvider),
-                    _buildThemeRadioTile('Peach Theme', 'peach', themeProvider),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Theme Mode', style: TextStyle(fontSize: 16)),
+                      DropdownButton<String>(
+                        value: themeProvider.themeName,
+                        underline: const SizedBox(),
+                        items: const [
+                          DropdownMenuItem(value: 'system', child: Text('System Default')),
+                          DropdownMenuItem(value: 'light', child: Text('Light')),
+                          DropdownMenuItem(value: 'dark', child: Text('Dark')),
+                          DropdownMenuItem(value: 'guava', child: Text('Guava Theme')),
+                          DropdownMenuItem(value: 'pineapple', child: Text('Pineapple Theme')),
+                          DropdownMenuItem(value: 'greyscale', child: Text('Greyscale')),
+                          DropdownMenuItem(value: 'grape', child: Text('Grape Theme')),
+                          DropdownMenuItem(value: 'peach', child: Text('Peach Theme')),
+                        ],
+                        onChanged: (newValue) {
+                          if (newValue != null) themeProvider.setTheme(newValue);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
               const SizedBox(height: 20),
 
-              const Text('Font', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              // --- FONT SELECTION ---
+              const Text('Font', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Card(
                 child: Column(
@@ -147,7 +161,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
               const SizedBox(height: 20),
 
-              const Text('Custom Theme', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              // --- CUSTOM THEME RGB SLIDERS ---
+              const Text('Custom Theme', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Card(
                 child: Padding(
@@ -157,19 +172,19 @@ class _SettingsPageState extends State<SettingsPage> {
                       _buildColorSlider('Red', Colors.red, _red, (v) => setState(() => _red = v)),
                       _buildColorSlider('Green', Colors.green, _green, (v) => setState(() => _green = v)),
                       _buildColorSlider('Blue', Colors.blue, _blue, (v) => setState(() => _blue = v)),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       Row(
                         children: [
                           Container(
-                            width: 60,
-                            height: 60,
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
                               color: Color.fromRGBO(_red.toInt(), _green.toInt(), _blue.toInt(), 1),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: Colors.grey),
                             ),
                           ),
-                          const SizedBox(width: 20),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
@@ -187,12 +202,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
               const SizedBox(height: 20),
 
-              const Text('Preferences', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              // --- PREFERENCES ---
+              const Text('Preferences', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Card(
                 child: Column(
                   children: [
-
                     ListTile(
                       title: const Text('Analytics View'),
                       subtitle: Text(themeProvider.analyticsView == '7day' ? '7-day history' : '1-day history'),
@@ -203,7 +218,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                     ),
-
+                    const Divider(height: 1),
                     ListTile(
                       title: const Text('Show Completed Count'),
                       trailing: Switch(
@@ -213,7 +228,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                     ),
-
+                    const Divider(height: 1),
                     ListTile(
                       title: const Text('Animations'),
                       trailing: Switch(
@@ -223,7 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                     ),
-
+                    const Divider(height: 1),
                     SwitchListTile(
                       title: const Text("NetPulse (Internet Speed)"),
                       subtitle: const Text("Show real-time speed in notification"),
@@ -247,7 +262,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
               const SizedBox(height: 20),
 
-              const Text('Data', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              // --- DATA MANAGEMENT ---
+              const Text('Data', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Card(
                 child: ListTile(
@@ -274,24 +290,44 @@ class _SettingsPageState extends State<SettingsPage> {
 
               const SizedBox(height: 20),
 
-              const Text('About', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              // --- ABOUT & UPDATES ---
+              const Text('About & Updates', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               Card(
-                child: ListTile(
-                  title: const Text('Contact Details'),
-                  trailing: const Icon(Icons.info_outline),
-                  onTap: () => _showContactDetails(context),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.system_update_alt, color: Colors.blue),
+                      title: const Text('Check for Updates'),
+                      subtitle: const Text('View latest APK releases on GitHub'),
+                      trailing: const Icon(Icons.open_in_new, size: 18),
+                      onTap: () => _launchUrl('https://github.com/bwnbits/personal_tracker/releases/latest'),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.info_outline),
+                      title: const Text('Contact Details'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _showContactDetails(context),
+                    ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
 
+              // --- FOOTER ---
               Center(
                 child: Column(
                   children: [
                     const Text(
+                      'Personal Tracker v2.3.2',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
                       'Created by Abhishek Ruhela in India',
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -317,19 +353,10 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildThemeRadioTile(String title, String value, ThemeProvider themeProvider) {
-    return RadioListTile<String>(
-      title: Text(title),
-      value: value,
-      groupValue: themeProvider.themeName,
-      onChanged: (newValue) => themeProvider.setTheme(newValue!),
-    );
-  }
-
   Widget _buildColorSlider(String label, Color color, double value, Function(double) onChanged) {
     return Row(
       children: [
-        Text(label, style: TextStyle(color: color)),
+        SizedBox(width: 50, child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold))),
         Expanded(
           child: Slider(
             value: value,
@@ -341,7 +368,7 @@ class _SettingsPageState extends State<SettingsPage> {
             onChanged: onChanged,
           ),
         ),
-        Text(value.toInt().toString(), style: TextStyle(color: color)),
+        SizedBox(width: 35, child: Text(value.toInt().toString(), style: TextStyle(color: color))),
       ],
     );
   }
