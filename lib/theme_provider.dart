@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ThemeProvider with ChangeNotifier {
   ThemeData _currentTheme;
@@ -141,31 +142,44 @@ class ThemeProvider with ChangeNotifier {
   );
 
   // ---------------------------------------------------------------------------
-  // BWNBits CREME
+  // BWNBits CREAM
   //
   // RGB: 225, 215, 206
   // HEX: #E1D7CE
   // ---------------------------------------------------------------------------
 
-  static final ThemeData cremeTheme = ThemeData(
+  static final ThemeData bwnbitsCreamTheme = ThemeData(
     brightness: Brightness.light,
     primaryColor: const Color(0xFFE1D7CE),
-    scaffoldBackgroundColor: const Color(0xFFF4F0EC),
-    cardColor: const Color(0xFFFAF8F6),
+    scaffoldBackgroundColor: const Color(0xFFF8F5F2),
     colorScheme: const ColorScheme.light(
       primary: Color(0xFFE1D7CE),
-      onPrimary: Color(0xFF2E2925),
-      secondary: Color(0xFFD2C5BA),
-      onSecondary: Color(0xFF2E2925),
-      surface: Color(0xFFFAF8F6),
-      onSurface: Color(0xFF2E2925),
+      onPrimary: Color(0xFF2C2926),
+      secondary: Color(0xFFD6C8BC),
+      onSecondary: Color(0xFF2C2926),
+      surface: Color(0xFFFFFDFC),
+      onSurface: Color(0xFF2C2926),
       error: Color(0xFFBA1A1A),
       onError: Colors.white,
+      outline: Color(0xFFDED6CF),
+      surfaceContainerHighest: Color(0xFFF8F5F2),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Color(0xFFE1D7CE),
-      foregroundColor: Color(0xFF2E2925),
+      foregroundColor: Color(0xFF2C2926),
       elevation: 0,
+    ),
+    cardTheme: CardThemeData(
+      color: const Color(0xFFFFFDFC),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: Color(0xFFDED6CF), width: 0.5),
+      ),
+    ),
+    dividerTheme: const DividerThemeData(
+      color: Color(0xFFDED6CF),
+      thickness: 1,
     ),
     useMaterial3: true,
   );
@@ -229,20 +243,15 @@ class ThemeProvider with ChangeNotifier {
   static Future<ThemeProvider> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final savedTheme =
-        prefs.getString('theme_preference') ?? 'system';
+    final savedTheme = prefs.getString('theme_preference') ?? 'system';
 
-    final savedFont =
-        prefs.getString(fontKey) ?? 'System Default';
+    final savedFont = prefs.getString(fontKey) ?? 'System Default';
 
-    final showCompletedCount =
-        prefs.getBool('show_completed_count') ?? false;
+    final showCompletedCount = prefs.getBool('show_completed_count') ?? false;
 
-    final analyticsView =
-        prefs.getString('analytics_view') ?? '7day';
+    final analyticsView = prefs.getString('analytics_view') ?? '7day';
 
-    final animationsEnabled =
-        prefs.getBool('animations_enabled') ?? true;
+    final animationsEnabled = prefs.getBool('animations_enabled') ?? true;
 
     ThemeData baseTheme;
     String themeName = savedTheme;
@@ -261,8 +270,8 @@ class ThemeProvider with ChangeNotifier {
       baseTheme = grapeTheme;
     } else if (savedTheme == 'peach') {
       baseTheme = peachTheme;
-    } else if (savedTheme == 'creme') {
-      baseTheme = cremeTheme;
+    } else if (savedTheme == 'creme' || savedTheme == 'bwnbits_cream') {
+      baseTheme = bwnbitsCreamTheme;
     } else if (savedTheme == customThemeKey) {
       final r = prefs.getInt(customRKey) ?? 0;
       final g = prefs.getInt(customGKey) ?? 0;
@@ -276,9 +285,7 @@ class ThemeProvider with ChangeNotifier {
     }
 
     final finalTheme = baseTheme.copyWith(
-      textTheme: baseTheme.textTheme.apply(
-        fontFamily: fontMap[savedFont],
-      ),
+      textTheme: _applyGoogleFont(baseTheme.textTheme, savedFont),
     );
 
     return ThemeProvider(
@@ -289,6 +296,19 @@ class ThemeProvider with ChangeNotifier {
       analyticsView,
       animationsEnabled,
     );
+  }
+
+  static TextTheme _applyGoogleFont(TextTheme baseTextTheme, String fontName) {
+    switch (fontName) {
+      case 'Roboto (Basic)':
+        return GoogleFonts.robotoTextTheme(baseTextTheme);
+      case 'Open Sans':
+        return GoogleFonts.openSansTextTheme(baseTextTheme);
+      case 'Lato':
+        return GoogleFonts.latoTextTheme(baseTextTheme);
+      default:
+        return baseTextTheme;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -321,8 +341,8 @@ class ThemeProvider with ChangeNotifier {
       baseTheme = grapeTheme;
     } else if (themeName == 'peach') {
       baseTheme = peachTheme;
-    } else if (themeName == 'creme') {
-      baseTheme = cremeTheme;
+    } else if (themeName == 'creme' || themeName == 'bwnbits_cream') {
+      baseTheme = bwnbitsCreamTheme;
     } else if (themeName == customThemeKey) {
       final r = prefs.getInt(customRKey) ?? 0;
       final g = prefs.getInt(customGKey) ?? 0;
@@ -334,9 +354,7 @@ class ThemeProvider with ChangeNotifier {
     }
 
     _currentTheme = baseTheme.copyWith(
-      textTheme: baseTheme.textTheme.apply(
-        fontFamily: fontMap[_fontFamily],
-      ),
+      textTheme: _applyGoogleFont(baseTheme.textTheme, _fontFamily),
     );
 
     notifyListeners();
@@ -384,9 +402,7 @@ class ThemeProvider with ChangeNotifier {
     );
 
     _currentTheme = customBase.copyWith(
-      textTheme: customBase.textTheme.apply(
-        fontFamily: fontMap[_fontFamily],
-      ),
+      textTheme: _applyGoogleFont(customBase.textTheme, _fontFamily),
     );
 
     notifyListeners();
