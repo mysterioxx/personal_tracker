@@ -1,4 +1,4 @@
-package com.example.personal_tracker
+package com.bwnbits.personal_tracker
 
 import android.app.*
 import android.content.Intent
