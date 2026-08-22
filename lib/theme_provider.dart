@@ -26,15 +26,21 @@ class ThemeProvider with ChangeNotifier {
   bool get animationsEnabled => _animationsEnabled;
   String get analyticsView => _analyticsView;
 
-  // --- FONT LIST ---
+  // ---------------------------------------------------------------------------
+  // FONT LIST
+  // ---------------------------------------------------------------------------
+
   static const Map<String, String?> fontMap = {
-    'System Default': null, // null defaults to device system font
+    'System Default': null,
     'Roboto (Basic)': 'Roboto',
     'Open Sans': 'Open Sans',
     'Lato': 'Lato',
   };
 
-  // --- STANDARD THEMES ---
+  // ---------------------------------------------------------------------------
+  // STANDARD THEMES
+  // ---------------------------------------------------------------------------
+
   static final ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     primarySwatch: Colors.blue,
@@ -47,7 +53,10 @@ class ThemeProvider with ChangeNotifier {
     useMaterial3: true,
   );
 
-  // Custom theme 1: Guava (Light mint green palette)
+  // ---------------------------------------------------------------------------
+  // GUAVA
+  // ---------------------------------------------------------------------------
+
   static final ThemeData guavaTheme = ThemeData(
     brightness: Brightness.light,
     primaryColor: const Color(0xFFB9E1D2),
@@ -62,7 +71,10 @@ class ThemeProvider with ChangeNotifier {
     useMaterial3: true,
   );
 
-  // Custom theme 2: Pineapple (Light yellow/gold palette)
+  // ---------------------------------------------------------------------------
+  // PINEAPPLE
+  // ---------------------------------------------------------------------------
+
   static final ThemeData pineappleTheme = ThemeData(
     brightness: Brightness.light,
     primaryColor: const Color(0xFFFFF07E),
@@ -77,7 +89,10 @@ class ThemeProvider with ChangeNotifier {
     useMaterial3: true,
   );
 
-  // Custom theme 3: Greyscale (Calm, minimal palette)
+  // ---------------------------------------------------------------------------
+  // GREYSCALE
+  // ---------------------------------------------------------------------------
+
   static final ThemeData greyscaleTheme = ThemeData(
     brightness: Brightness.light,
     primarySwatch: Colors.grey,
@@ -92,7 +107,10 @@ class ThemeProvider with ChangeNotifier {
     useMaterial3: true,
   );
 
-  // Custom theme 4: Grape (Dark, calm purple)
+  // ---------------------------------------------------------------------------
+  // GRAPE
+  // ---------------------------------------------------------------------------
+
   static final ThemeData grapeTheme = ThemeData(
     brightness: Brightness.dark,
     primaryColor: const Color(0xFF7B68EE),
@@ -105,7 +123,10 @@ class ThemeProvider with ChangeNotifier {
     useMaterial3: true,
   );
 
-  // Custom theme 5: Peach (Pastel peach palette)
+  // ---------------------------------------------------------------------------
+  // PEACH
+  // ---------------------------------------------------------------------------
+
   static final ThemeData peachTheme = ThemeData(
     brightness: Brightness.light,
     primaryColor: const Color(0xFFFFB347),
@@ -119,19 +140,67 @@ class ThemeProvider with ChangeNotifier {
     useMaterial3: true,
   );
 
-  // --- CUSTOM RGB KEYS ---
+  // ---------------------------------------------------------------------------
+  // BWNBits CREME
+  //
+  // RGB: 225, 215, 206
+  // HEX: #E1D7CE
+  // ---------------------------------------------------------------------------
+
+  static final ThemeData cremeTheme = ThemeData(
+    brightness: Brightness.light,
+    primaryColor: const Color(0xFFE1D7CE),
+    scaffoldBackgroundColor: const Color(0xFFF4F0EC),
+    cardColor: const Color(0xFFFAF8F6),
+    colorScheme: const ColorScheme.light(
+      primary: Color(0xFFE1D7CE),
+      onPrimary: Color(0xFF2E2925),
+      secondary: Color(0xFFD2C5BA),
+      onSecondary: Color(0xFF2E2925),
+      surface: Color(0xFFFAF8F6),
+      onSurface: Color(0xFF2E2925),
+      error: Color(0xFFBA1A1A),
+      onError: Colors.white,
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFFE1D7CE),
+      foregroundColor: Color(0xFF2E2925),
+      elevation: 0,
+    ),
+    useMaterial3: true,
+  );
+
+  // ---------------------------------------------------------------------------
+  // CUSTOM RGB KEYS
+  // ---------------------------------------------------------------------------
+
   static const String customThemeKey = 'custom_rgb';
   static const String customRKey = 'custom_r';
   static const String customGKey = 'custom_g';
   static const String customBKey = 'custom_b';
   static const String fontKey = 'font_family';
 
-  // Helper function to create custom theme with readable text contrast
+  // ---------------------------------------------------------------------------
+  // CUSTOM RGB THEME
+  // ---------------------------------------------------------------------------
+
   static ThemeData _createCustomTheme(int r, int g, int b) {
     final Color primary = Color.fromRGBO(r, g, b, 1);
-    final Color secondary = Color.fromRGBO((r + 40).clamp(0, 255), (g + 40).clamp(0, 255), (b + 40).clamp(0, 255), 1);
-    final Color background = Color.fromRGBO((r + 20).clamp(0, 255), (g + 20).clamp(0, 255), (b + 20).clamp(0, 255), 1);
-    
+
+    final Color secondary = Color.fromRGBO(
+      (r + 40).clamp(0, 255),
+      (g + 40).clamp(0, 255),
+      (b + 40).clamp(0, 255),
+      1,
+    );
+
+    final Color background = Color.fromRGBO(
+      (r + 20).clamp(0, 255),
+      (g + 20).clamp(0, 255),
+      (b + 20).clamp(0, 255),
+      1,
+    );
+
     final bool isLight = primary.computeLuminance() > 0.5;
     final Color textColor = isLight ? Colors.black : Colors.white;
 
@@ -153,14 +222,27 @@ class ThemeProvider with ChangeNotifier {
     );
   }
 
-  // Load saved theme and preferences
+  // ---------------------------------------------------------------------------
+  // LOAD SAVED THEME
+  // ---------------------------------------------------------------------------
+
   static Future<ThemeProvider> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedTheme = prefs.getString('theme_preference') ?? 'system';
-    final savedFont = prefs.getString(fontKey) ?? 'System Default';
-    final showCompletedCount = prefs.getBool('show_completed_count') ?? false;
-    final analyticsView = prefs.getString('analytics_view') ?? '7day';
-    final animationsEnabled = prefs.getBool('animations_enabled') ?? true;
+
+    final savedTheme =
+        prefs.getString('theme_preference') ?? 'system';
+
+    final savedFont =
+        prefs.getString(fontKey) ?? 'System Default';
+
+    final showCompletedCount =
+        prefs.getBool('show_completed_count') ?? false;
+
+    final analyticsView =
+        prefs.getString('analytics_view') ?? '7day';
+
+    final animationsEnabled =
+        prefs.getBool('animations_enabled') ?? true;
 
     ThemeData baseTheme;
     String themeName = savedTheme;
@@ -179,10 +261,13 @@ class ThemeProvider with ChangeNotifier {
       baseTheme = grapeTheme;
     } else if (savedTheme == 'peach') {
       baseTheme = peachTheme;
+    } else if (savedTheme == 'creme') {
+      baseTheme = cremeTheme;
     } else if (savedTheme == customThemeKey) {
       final r = prefs.getInt(customRKey) ?? 0;
       final g = prefs.getInt(customGKey) ?? 0;
       final b = prefs.getInt(customBKey) ?? 0;
+
       baseTheme = _createCustomTheme(r, g, b);
       themeName = customThemeKey;
     } else {
@@ -196,16 +281,32 @@ class ThemeProvider with ChangeNotifier {
       ),
     );
 
-    return ThemeProvider(finalTheme, themeName, savedFont, showCompletedCount, analyticsView, animationsEnabled);
+    return ThemeProvider(
+      finalTheme,
+      themeName,
+      savedFont,
+      showCompletedCount,
+      analyticsView,
+      animationsEnabled,
+    );
   }
 
-  // Set new theme
+  // ---------------------------------------------------------------------------
+  // SET THEME
+  // ---------------------------------------------------------------------------
+
   void setTheme(String themeName) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('theme_preference', themeName);
+
+    await prefs.setString(
+      'theme_preference',
+      themeName,
+    );
+
     _themeName = themeName;
 
     ThemeData baseTheme;
+
     if (themeName == 'light') {
       baseTheme = lightTheme;
     } else if (themeName == 'dark') {
@@ -220,77 +321,136 @@ class ThemeProvider with ChangeNotifier {
       baseTheme = grapeTheme;
     } else if (themeName == 'peach') {
       baseTheme = peachTheme;
+    } else if (themeName == 'creme') {
+      baseTheme = cremeTheme;
     } else if (themeName == customThemeKey) {
       final r = prefs.getInt(customRKey) ?? 0;
       final g = prefs.getInt(customGKey) ?? 0;
       final b = prefs.getInt(customBKey) ?? 0;
+
       baseTheme = _createCustomTheme(r, g, b);
     } else {
       baseTheme = lightTheme;
     }
 
     _currentTheme = baseTheme.copyWith(
-      textTheme: baseTheme.textTheme.apply(fontFamily: fontMap[_fontFamily]),
+      textTheme: baseTheme.textTheme.apply(
+        fontFamily: fontMap[_fontFamily],
+      ),
     );
 
     notifyListeners();
   }
 
-  // Set Font Family
+  // ---------------------------------------------------------------------------
+  // FONT FAMILY
+  // ---------------------------------------------------------------------------
+
   void setFontFamily(String familyName) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(fontKey, familyName);
+
+    await prefs.setString(
+      fontKey,
+      familyName,
+    );
+
     _fontFamily = familyName;
 
     setTheme(_themeName);
   }
 
-  // Set Custom Theme with RGB
+  // ---------------------------------------------------------------------------
+  // CUSTOM THEME
+  // ---------------------------------------------------------------------------
+
   void setCustomTheme(int r, int g, int b) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('theme_preference', customThemeKey);
+
+    await prefs.setString(
+      'theme_preference',
+      customThemeKey,
+    );
+
     await prefs.setInt(customRKey, r);
     await prefs.setInt(customGKey, g);
     await prefs.setInt(customBKey, b);
+
     _themeName = customThemeKey;
 
-    final customBase = _createCustomTheme(r, g, b);
-    _currentTheme = customBase.copyWith(
-      textTheme: customBase.textTheme.apply(fontFamily: fontMap[_fontFamily]),
+    final customBase = _createCustomTheme(
+      r,
+      g,
+      b,
     );
+
+    _currentTheme = customBase.copyWith(
+      textTheme: customBase.textTheme.apply(
+        fontFamily: fontMap[_fontFamily],
+      ),
+    );
+
     notifyListeners();
   }
 
-  // Set Preferences
+  // ---------------------------------------------------------------------------
+  // PREFERENCES
+  // ---------------------------------------------------------------------------
+
   void setShowCompletedCount(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('show_completed_count', value);
+
+    await prefs.setBool(
+      'show_completed_count',
+      value,
+    );
+
     _showCompletedCount = value;
+
     notifyListeners();
   }
 
   void setAnalyticsView(String value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('analytics_view', value);
+
+    await prefs.setString(
+      'analytics_view',
+      value,
+    );
+
     _analyticsView = value;
+
     notifyListeners();
   }
 
   void setAnimationsEnabled(bool value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('animations_enabled', value);
+
+    await prefs.setBool(
+      'animations_enabled',
+      value,
+    );
+
     _animationsEnabled = value;
+
     notifyListeners();
   }
 
+  // ---------------------------------------------------------------------------
+  // RESET ALL DATA
+  // ---------------------------------------------------------------------------
+
   void resetAllData() async {
     final prefs = await SharedPreferences.getInstance();
+
     await prefs.clear();
+
     _showCompletedCount = false;
     _analyticsView = '7day';
     _animationsEnabled = true;
     _themeName = 'system';
+    _fontFamily = 'System Default';
     _currentTheme = lightTheme;
+
     notifyListeners();
   }
 }

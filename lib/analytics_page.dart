@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
-import 'dashboard1.dart'; // Import the Task class from dashboard1.dart
+import 'models/task.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});

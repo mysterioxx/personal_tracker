@@ -12,7 +12,12 @@ class NetworkSpeedService {
   }
 
   Future<Map<String, dynamic>> getTotals() async {
-    final result = await platform.invokeMethod('getTotals');
-    return Map<String, dynamic>.from(result);
+    try {
+      final result = await platform.invokeMethod('getTotals');
+      if (result == null) return {'download': 0, 'upload': 0};
+      return Map<String, dynamic>.from(result);
+    } catch (e) {
+      return {'download': 0, 'upload': 0};
+    }
   }
 }

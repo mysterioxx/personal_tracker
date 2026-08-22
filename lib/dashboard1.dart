@@ -4,33 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'analytics_page.dart'; // Import for navigation
-
-// --- A class to represent a Task with its properties ---
-class Task {
-  String name;
-  bool isCompleted;
-  DateTime createdDate;
-
-  Task({
-    required this.name,
-    this.isCompleted = false,
-    required this.createdDate,
-  });
-
-  // Convert a Task object to a JSON map for saving.
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'isCompleted': isCompleted,
-        'createdDate': createdDate.toIso8601String(),
-      };
-
-  // Create a Task object from a JSON map.
-  factory Task.fromJson(Map<String, dynamic> json) => Task(
-        name: json['name'],
-        isCompleted: json['isCompleted'] ?? false,
-        createdDate: DateTime.parse(json['createdDate']),
-      );
-}
+import 'models/task.dart';
 
 // --- PAGE 1: DASHBOARD ---
 class DashboardPage extends StatefulWidget {
@@ -114,20 +88,25 @@ class _DashboardPageState extends State<DashboardPage> {
     try {
       final response = await http.get(Uri.parse('https://zenquotes.io/api/random'));
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body)[0];
+        final decoded = jsonDecode(response.body);
+        if (decoded is List && decoded.isNotEmpty) {
+          final data = decoded[0];
 
-        if (savedQuote != null) {
-          final oldQuote = {'q': savedQuote, 'a': savedAuthor};
-          _quoteHistory.insert(0, oldQuote);
-          if (_quoteHistory.length > 10) {
-            _quoteHistory.removeLast();
+          if (savedQuote != null) {
+            final oldQuote = {'q': savedQuote, 'a': savedAuthor};
+            _quoteHistory.insert(0, oldQuote);
+            if (_quoteHistory.length > 10) {
+              _quoteHistory.removeLast();
+            }
+            _saveQuoteHistory();
           }
-          _saveQuoteHistory();
-        }
 
-        await prefs.setString('saved_quote', data['q']);
-        await prefs.setString('saved_author', data['a']);
-        return data;
+          await prefs.setString('saved_quote', data['q']);
+          await prefs.setString('saved_author', data['a']);
+          return data;
+        } else {
+          throw Exception('Received invalid data from quote API.');
+        }
       } else {
         throw Exception('Failed to load quote: ${response.statusCode}');
       }
